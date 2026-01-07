@@ -55,16 +55,6 @@ This is a hackathon build. Things may change quickly and break occasionally, but
 
 ---
 
-## Contributing (super welcome)
-If you want to help, here are good areas:
-- Mobile controls feel
-- Block placement UX (preview, hold-to-build, etc.)
-- Performance improvements (especially on phones)
-- New block types + textures
-- World loading and “join experience”
-
----
-
 ## Credits
 Inspired by Minecraft Classic and classic voxel sandbox games.
 
