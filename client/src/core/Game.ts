@@ -166,13 +166,13 @@ export class Game {
       console.log('[Game] Welcome received, player_id:', data.player_id);
       this.playerId = data.player_id;
 
-      // Set spawn position from server
+      // Use server's X/Z but calculate Y locally from terrain
+      const spawnX = data.spawn_position.x;
+      const spawnZ = data.spawn_position.z;
+      const spawnY = terrainGenerator.getSpawnHeight(spawnX, spawnZ);
+
       if (this.playerController) {
-        this.playerController.position.set(
-          data.spawn_position.x,
-          data.spawn_position.y,
-          data.spawn_position.z
-        );
+        this.playerController.position.set(spawnX, spawnY, spawnZ);
       }
 
       // Add existing players
@@ -183,7 +183,7 @@ export class Game {
       }
 
       // Subscribe to sections around spawn
-      this.subscribeToSectionsAround(data.spawn_position.x, data.spawn_position.z);
+      this.subscribeToSectionsAround(spawnX, spawnZ);
 
       // Start loading world
       this.setState('loading');

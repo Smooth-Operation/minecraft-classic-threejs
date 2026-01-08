@@ -58,6 +58,9 @@ export class WorldManager {
 
   async flushDirtySections(): Promise<void> {
     for (const [worldId, world] of this.worlds) {
+      // Skip persistence for default-world (no database)
+      if (worldId === 'default-world') continue;
+
       const dirtySections: Section[] = [];
 
       for (const section of world.loadedSections.values()) {
