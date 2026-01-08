@@ -36,14 +36,16 @@ export interface SectionData {
   geometry?: BufferGeometry;
 }
 
-// Player state
+// Player state (server sends player_id)
 export interface PlayerState {
-  id: string;
+  id: string;  // Client uses this internally
+  player_id?: string;  // Server sends this in some messages
+  display_name?: string;
   position: Vec3;
   velocity: Vec3;
   yaw: number;
   pitch: number;
-  lastInputSeq: number;
+  lastInputSeq?: number;
 }
 
 // Network message types
@@ -85,7 +87,13 @@ export interface WelcomeMessage extends MessageEnvelope {
   player_id: string;
   spawn_position: Vec3;
   server_time: number;
-  players: PlayerState[];
+  players: {
+    player_id: string;
+    display_name: string;
+    position: Vec3;
+    yaw: number;
+    pitch: number;
+  }[];
   registry_version: number;
   generator_version: number;
 }
@@ -114,7 +122,14 @@ export interface InputMessage extends MessageEnvelope {
 export interface SnapshotMessage extends MessageEnvelope {
   type: 'SNAPSHOT';
   server_time: number;
-  players: PlayerState[];
+  players: {
+    player_id: string;
+    position: Vec3;
+    velocity: Vec3;
+    yaw: number;
+    pitch: number;
+    last_input_seq: number;
+  }[];
 }
 
 // SUBSCRIBE message (Client → Server)
@@ -177,7 +192,13 @@ export interface RedirectMessage extends MessageEnvelope {
 export interface PlayerJoinMessage extends MessageEnvelope {
   type: 'PLAYER_JOIN';
   protocol_version: number;
-  player: PlayerState;
+  player: {
+    player_id: string;
+    display_name: string;
+    position: Vec3;
+    yaw: number;
+    pitch: number;
+  };
 }
 
 // PLAYER_LEAVE message (Server → Client)

@@ -248,12 +248,12 @@ export class NetworkManager {
 
   private handlePlayerJoin(msg: PlayerJoinMessage): void {
     this.eventBus.emit('player_join', {
-      id: msg.player.id,
+      id: msg.player.player_id,
       position: msg.player.position,
-      velocity: msg.player.velocity,
+      velocity: { x: 0, y: 0, z: 0 }, // PlayerInfo doesn't have velocity
       yaw: msg.player.yaw,
       pitch: msg.player.pitch,
-      lastInputSeq: msg.player.lastInputSeq,
+      lastInputSeq: 0, // PlayerInfo doesn't have lastInputSeq
     });
   }
 

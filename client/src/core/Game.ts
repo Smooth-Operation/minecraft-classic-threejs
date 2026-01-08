@@ -176,9 +176,16 @@ export class Game {
       }
 
       // Add existing players
+      console.log('[Game] Existing players in welcome:', data.players);
       for (const player of data.players) {
-        if (player.id !== this.playerId) {
-          this.addOtherPlayer(player);
+        // Server sends player_id, we normalize to id
+        const playerId = player.player_id || player.id;
+        if (playerId && playerId !== this.playerId) {
+          console.log('[Game] Adding other player:', playerId, 'at', player.position);
+          this.addOtherPlayer({
+            ...player,
+            id: playerId,
+          });
         }
       }
 
@@ -198,9 +205,17 @@ export class Game {
 
     // Handle SNAPSHOT - other player positions
     eventBus.on('snapshot', (data: { players: PlayerState[] }) => {
+      if (data.players.length > 0 && this.otherPlayers.size === 0) {
+        console.log('[Game] Snapshot received with players but no local meshes yet');
+      }
       for (const player of data.players) {
-        if (player.id !== this.playerId) {
-          this.updateOtherPlayer(player);
+        // Server sends player_id, we normalize to id
+        const playerId = player.player_id || player.id;
+        if (playerId && playerId !== this.playerId) {
+          this.updateOtherPlayer({
+            ...player,
+            id: playerId,
+          });
         }
       }
     });
@@ -276,6 +291,7 @@ export class Game {
       pitch: number;
       lastInputSeq: number;
     }) => {
+      console.log('[Game] Player join event:', data.id, 'my playerId:', this.playerId);
       if (data.id !== this.playerId) {
         this.addOtherPlayer({
           id: data.id,
@@ -300,12 +316,14 @@ export class Game {
   }
 
   private addOtherPlayer(player: PlayerState): void {
+    console.log('[Game] addOtherPlayer called for:', player.id, 'position:', player.position);
     const geometry = new THREE.BoxGeometry(0.6, 1.8, 0.6);
     const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(player.position.x, player.position.y + 0.9, player.position.z);
     this.renderer.getScene().add(mesh);
     this.otherPlayers.set(player.id, mesh);
+    console.log('[Game] Player mesh added, total other players:', this.otherPlayers.size);
   }
 
   private updateOtherPlayer(player: PlayerState): void {
