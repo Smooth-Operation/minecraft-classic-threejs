@@ -210,17 +210,23 @@ export class Game {
       const cz = parseInt(czStr);
       const sy = parseInt(syStr);
 
-      // Decode base64 blocks
-      const binaryStr = atob(data.blocks);
-      const bytes = new Uint8Array(binaryStr.length);
-      for (let i = 0; i < binaryStr.length; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
-      }
-      const blocks = new Uint16Array(bytes.buffer);
-
-      // Load section with server data
       const section = this.world.getOrCreateSection(cx, cz, sy);
-      section.blocks.set(blocks);
+
+      if (data.is_baseline) {
+        // Baseline section - generate locally with client's terrain generator
+        const generatedBlocks = terrainGenerator.generateSection(cx, cz, sy);
+        section.blocks.set(generatedBlocks);
+      } else {
+        // Modified section - use server data (has player edits)
+        const binaryStr = atob(data.blocks);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blocks = new Uint16Array(bytes.buffer);
+        section.blocks.set(blocks);
+      }
+
       section.version = data.version;
       section.dirty = true;
     });

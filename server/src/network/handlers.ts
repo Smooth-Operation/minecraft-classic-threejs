@@ -155,15 +155,18 @@ export class MessageHandler {
       return null;
     }
 
-    // Add player to world
-    const player = await this.worldManager.addPlayer(msg.world_id, userId, ws);
+    // Add player to world (pass display name from token if available)
+    const displayName = authResult.payload.displayName;
+    const player = await this.worldManager.addPlayer(msg.world_id, userId, ws, displayName);
 
-    // Register world session (creates or updates)
-    try {
-      await registerWorldSession(msg.world_id, this.instanceId, this.wsUrl);
-    } catch (error) {
-      console.error('Failed to register world session:', error);
-      // Non-fatal - continue anyway
+    // Register world session (creates or updates) - skip for default-world
+    if (msg.world_id !== 'default-world') {
+      try {
+        await registerWorldSession(msg.world_id, this.instanceId, this.wsUrl);
+      } catch (error) {
+        console.error('Failed to register world session:', error);
+        // Non-fatal - continue anyway
+      }
     }
 
     // Get existing players for welcome message
@@ -236,13 +239,6 @@ export class MessageHandler {
   async handleSubscribe(player: Player, msg: SubscribeMessage): Promise<void> {
     player.lastActivity = Date.now();
 
-    // Rate limit
-    const now = Date.now();
-    if (now - player.lastSubscribeReset > 1000) {
-      player.subscribeCount = 0;
-      player.lastSubscribeReset = now;
-    }
-
     // Process unsubscribes
     if (msg.unsubscribe_ids) {
       for (const sectionId of msg.unsubscribe_ids) {
@@ -250,20 +246,8 @@ export class MessageHandler {
       }
     }
 
-    // Process subscribes
+    // Process subscribes (no rate limiting for now)
     for (const sectionId of msg.section_ids) {
-      // Rate limit check
-      if (player.subscribeCount >= MAX_SUBSCRIBE_PER_SECOND) {
-        this.sendError(player.connection, 'RATE_LIMITED', 'Subscribe rate limit exceeded', false);
-        break;
-      }
-
-      // Max sections check
-      if (player.subscribedSections.size >= MAX_SECTIONS_MOBILE) {
-        this.sendError(player.connection, 'RATE_LIMITED', 'Max subscribed sections reached', false);
-        break;
-      }
-
       // Validate section ID
       const coords = parseSectionId(sectionId);
       if (!coords) {
@@ -273,21 +257,18 @@ export class MessageHandler {
 
       // Subscribe
       this.worldManager.subscribeToSection(player.worldId, player.playerId, sectionId);
-      player.subscribeCount++;
 
       // Queue section for sending
       player.pendingSections.push(sectionId);
     }
 
-    // Send pending sections (respecting rate limit)
+    // Send pending sections
     await this.sendPendingSections(player);
   }
 
   async sendPendingSections(player: Player): Promise<void> {
-    const sectionsToSend = Math.min(
-      player.pendingSections.length,
-      SECTIONS_PER_SECOND_MOBILE
-    );
+    // Send all pending sections (no throttling for now)
+    const sectionsToSend = player.pendingSections.length;
 
     for (let i = 0; i < sectionsToSend; i++) {
       const sectionId = player.pendingSections.shift();

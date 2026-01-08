@@ -72,12 +72,13 @@ export function isAllAirSection(sectionId: string): boolean {
   return yStart > GRASS_LAYER;
 }
 
-// Find spawn position (center of world, on grass)
+// Find spawn position (center of world, above terrain)
+// Spawn high so player falls to ground - terrain height varies with biomes
 export function getSpawnPosition(): { x: number; y: number; z: number } {
   return {
-    x: 2048, // Center of 4096
-    y: 5,   // One block above grass (Y=4)
-    z: 2048,
+    x: 512,  // Near world origin for faster initial load
+    y: 80,   // High enough to be above any terrain (mountains max ~75)
+    z: 512,
   };
 }
 

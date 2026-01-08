@@ -37,7 +37,7 @@ export const JWKS_CACHE_TTL_MS = 3600000; // 1 hour
 export const MAX_REACH_DISTANCE = 5.0;
 export const PLAYER_EYE_HEIGHT = 1.6;
 export const MAX_EDITS_PER_SECOND = 20;
-export const MAX_SUBSCRIBE_PER_SECOND = 10;
+export const MAX_SUBSCRIBE_PER_SECOND = 100; // Allow initial world load
 
 // Movement
 export const MAX_HORIZONTAL_SPEED = 10; // blocks/sec

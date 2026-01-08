@@ -249,10 +249,10 @@ export class GameServer {
 
   private startHeartbeat(): void {
     this.heartbeatInterval = setInterval(async () => {
-      // Update heartbeat for each active world
+      // Update heartbeat for each active world (skip default-world)
       const worldIds = new Set<string>();
       for (const player of this.connections.values()) {
-        if (player) {
+        if (player && player.worldId !== 'default-world') {
           worldIds.add(player.worldId);
         }
       }

@@ -104,6 +104,15 @@ export class WorldManager {
     worldId: string,
     userId: string
   ): Promise<{ valid: boolean; error?: string; errorCode?: string }> {
+    // Allow "default-world" without database check (public sandbox)
+    if (worldId === 'default-world') {
+      const world = this.getOrCreateWorld(worldId);
+      world.generatorVersion = GENERATOR_VERSION;
+      world.registryVersion = REGISTRY_VERSION;
+      world.isPublic = true;
+      return { valid: true };
+    }
+
     // Check world exists
     const dbWorld = await getWorld(worldId);
     if (!dbWorld) {
@@ -142,10 +151,12 @@ export class WorldManager {
   async addPlayer(
     worldId: string,
     playerId: string,
-    connection: WebSocket
+    connection: WebSocket,
+    displayNameHint?: string
   ): Promise<Player> {
     const world = this.getOrCreateWorld(worldId);
-    const displayName = await getUserDisplayName(playerId);
+    // Use provided display name or fetch from database
+    const displayName = displayNameHint || await getUserDisplayName(playerId);
     const spawn = getSpawnPosition();
 
     const player: Player = {
@@ -171,8 +182,10 @@ export class WorldManager {
 
     world.activePlayers.set(playerId, player);
 
-    // Record in database
-    await recordPlayerJoin(worldId, playerId, displayName);
+    // Record in database (skip for default-world)
+    if (worldId !== 'default-world') {
+      await recordPlayerJoin(worldId, playerId, displayName);
+    }
 
     console.log(`Player ${displayName} (${playerId}) joined world ${worldId}`);
 
@@ -199,8 +212,10 @@ export class WorldManager {
 
     world.activePlayers.delete(playerId);
 
-    // Record in database
-    await recordPlayerLeave(worldId, playerId);
+    // Record in database (skip for default-world)
+    if (worldId !== 'default-world') {
+      await recordPlayerLeave(worldId, playerId);
+    }
 
     console.log(`Player ${player.displayName} (${playerId}) left world ${worldId}`);
 
@@ -235,8 +250,13 @@ export class WorldManager {
       return section;
     }
 
-    // Load from database or generate
-    section = await loadSection(worldId, sectionId);
+    // For default-world, just generate (no database)
+    if (worldId === 'default-world') {
+      section = generateBaselineSection(sectionId);
+    } else {
+      // Load from database or generate
+      section = await loadSection(worldId, sectionId);
+    }
     world.loadedSections.set(sectionId, section);
 
     return section;
