@@ -182,7 +182,14 @@ export class Game {
         }
       }
 
-      // Subscribe to sections around spawn
+      // Pre-generate terrain locally around spawn (collision needs this immediately)
+      const sectionIds = this.world.getSectionsInRadius(spawnX, spawnZ, this.viewRadius);
+      for (const id of sectionIds) {
+        const [cxStr, czStr, syStr] = id.split(':');
+        this.world.getOrCreateSection(parseInt(cxStr), parseInt(czStr), parseInt(syStr));
+      }
+
+      // Subscribe to sections from server (will update with any edits)
       this.subscribeToSectionsAround(spawnX, spawnZ);
 
       // Start loading world
