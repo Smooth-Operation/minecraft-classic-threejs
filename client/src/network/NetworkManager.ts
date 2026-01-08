@@ -10,6 +10,8 @@ import type {
   SectionDataMessage,
   BlockEditRequest,
   BlockEvent,
+  PlayerJoinMessage,
+  PlayerLeaveMessage,
   GameMessage,
 } from '../types';
 
@@ -172,6 +174,12 @@ export class NetworkManager {
         case 'BLOCK_EVENT':
           this.handleBlockEvent(message as BlockEvent);
           break;
+        case 'PLAYER_JOIN':
+          this.handlePlayerJoin(message as PlayerJoinMessage);
+          break;
+        case 'PLAYER_LEAVE':
+          this.handlePlayerLeave(message as PlayerLeaveMessage);
+          break;
         case 'ERROR':
           this.handleError(message as ErrorMessage);
           break;
@@ -236,6 +244,23 @@ export class NetworkManager {
       this.autoReconnect = false;
       this.disconnect();
     }
+  }
+
+  private handlePlayerJoin(msg: PlayerJoinMessage): void {
+    this.eventBus.emit('player_join', {
+      id: msg.player.id,
+      position: msg.player.position,
+      velocity: msg.player.velocity,
+      yaw: msg.player.yaw,
+      pitch: msg.player.pitch,
+      lastInputSeq: msg.player.lastInputSeq,
+    });
+  }
+
+  private handlePlayerLeave(msg: PlayerLeaveMessage): void {
+    this.eventBus.emit('player_leave', {
+      player_id: msg.player_id,
+    });
   }
 
   sendInput(

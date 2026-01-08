@@ -266,6 +266,32 @@ export class Game {
         this.setState('disconnected');
       }
     });
+
+    // Handle player join
+    eventBus.on('player_join', (data: {
+      id: string;
+      position: Vec3;
+      velocity: Vec3;
+      yaw: number;
+      pitch: number;
+      lastInputSeq: number;
+    }) => {
+      if (data.id !== this.playerId) {
+        this.addOtherPlayer({
+          id: data.id,
+          position: data.position,
+          velocity: data.velocity,
+          yaw: data.yaw,
+          pitch: data.pitch,
+          lastInputSeq: data.lastInputSeq,
+        });
+      }
+    });
+
+    // Handle player leave
+    eventBus.on('player_leave', (data: { player_id: string }) => {
+      this.removeOtherPlayer(data.player_id);
+    });
   }
 
   private subscribeToSectionsAround(x: number, z: number): void {
@@ -290,6 +316,21 @@ export class Game {
     }
     if (mesh) {
       mesh.position.set(player.position.x, player.position.y + 0.9, player.position.z);
+    }
+  }
+
+  private removeOtherPlayer(playerId: string): void {
+    const mesh = this.otherPlayers.get(playerId);
+    if (mesh) {
+      this.renderer.getScene().remove(mesh);
+      mesh.geometry.dispose();
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(m => m.dispose());
+      } else {
+        mesh.material.dispose();
+      }
+      this.otherPlayers.delete(playerId);
+      console.log(`[Game] Removed player ${playerId}`);
     }
   }
 

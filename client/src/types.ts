@@ -58,7 +58,9 @@ export type MessageType =
   | 'RESYNC'
   | 'BLOCK_EDIT_REQUEST'
   | 'BLOCK_EVENT'
-  | 'REDIRECT';
+  | 'REDIRECT'
+  | 'PLAYER_JOIN'
+  | 'PLAYER_LEAVE';
 
 // Base message envelope
 export interface MessageEnvelope {
@@ -171,6 +173,20 @@ export interface RedirectMessage extends MessageEnvelope {
   delay_ms: number;
 }
 
+// PLAYER_JOIN message (Server → Client)
+export interface PlayerJoinMessage extends MessageEnvelope {
+  type: 'PLAYER_JOIN';
+  protocol_version: number;
+  player: PlayerState;
+}
+
+// PLAYER_LEAVE message (Server → Client)
+export interface PlayerLeaveMessage extends MessageEnvelope {
+  type: 'PLAYER_LEAVE';
+  protocol_version: number;
+  player_id: string;
+}
+
 // Union type for all messages
 export type GameMessage =
   | HelloMessage
@@ -183,7 +199,9 @@ export type GameMessage =
   | ResyncMessage
   | BlockEditRequest
   | BlockEvent
-  | RedirectMessage;
+  | RedirectMessage
+  | PlayerJoinMessage
+  | PlayerLeaveMessage;
 
 // Worker messages
 export interface MeshRequest {

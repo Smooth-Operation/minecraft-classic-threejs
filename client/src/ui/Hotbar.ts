@@ -17,7 +17,8 @@ export class Hotbar {
       padding: 4px;
       background: rgba(0, 0, 0, 0.5);
       border-radius: 4px;
-      z-index: 50;
+      z-index: 150;
+      pointer-events: auto;
     `;
 
     // Create slots
